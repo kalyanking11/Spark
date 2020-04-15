@@ -1,0 +1,687 @@
+koppurkn@hadoop-gate-0:~$ pyspark
+Python 2.7.12 (default, Oct  8 2019, 14:14:10)
+[GCC 5.4.0 20160609] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+20/04/13 23:31:01 WARN Utils: Service 'SparkUI' could not bind on port 4040. Attempting port 4041.
+Welcome to
+      ____              __
+     / __/__  ___ _____/ /__
+    _\ \/ _ \/ _ `/ __/  '_/
+   /__ / .__/\_,_/_/ /_/\_\   version 2.3.2.3.1.0.0-78
+      /_/
+
+Using Python version 2.7.12 (default, Oct  8 2019 14:14:10)
+SparkSession available as 'spark'.
+Question:1-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#2010
+>>> file_path = '/data/weather/2010/*'
+>>> inTextData2010 = spark.read.format("csv").option("header", "true").option("delimiter","\t").load(file_path)
+>>> inTextData2010.count()
+3686244
+>>>name_list = inTextData2010.schema.names
+['STN--- WBAN   YEARMODA    TEMP       DEWP      SLP        STP       VISIB      WDSP     MXSPD   GUST    MAX     MIN   PRCP   SNDP   FRSHTT']
+
+>>>name_list = str(name_list).strip("['']").split(' ')
+>>>names = []
+>>>for item in name_list:
+ …	   if len(item)>0:
+ …		names.append(item)
+>>>print(names)
+['STN---', 'WBAN', 'YEARMODA', 'TEMP', 'DEWP', 'SLP', 'STP', 'VISIB', 'WDSP', 'MXSPD', 'GUST', 'MAX', 'MIN', 'PRCP', 'SNDP', 'FRSHTT']
+>>>rdd1 = inTextData2010.rdd
+>>>type(rdd1)
+<class 'pyspark.rdd.RDD'>
+>>>rdd1.count()
+3686244
+>>> rdd1.take(2)
+[Row(STN--- WBAN   YEARMODA    TEMP       DEWP      SLP        STP       VISIB      WDSP     MXSPD   GUST    MAX     MIN   PRCP   SNDP   FRSHTT=u'010080 99999  20100101    23.2 24    19.0 24  9999.9  0  9999.9  0    7.0 23    6.0 24   15.9  999.9    33.8*   14.0   0.00H 999.9  001000'), Row(STN--- WBAN   YEARMODA    TEMP       DEWP      SLP        STP       VISIB      WDSP     MXSPD   GUST    MAX     MIN   PRCP   SNDP   FRSHTT=u'010080 99999  20100102    20.5 24    16.4 24  9999.9  0  9999.9  0    6.2 24   20.4 24   33.0   40.0    33.4*    8.6*  0.00G   5.1  001000')]
+>>> rdd2 = rdd1.map(lambda x: str(x).split('=')[1])
+>>> rdd2.take(4)
+["u'010080 99999  20100101    23.2 24    19.0 24  9999.9  0  9999.9  0    7.0 23    6.0 24   15.9  999.9    33.8*   14.0   0.00H 999.9  001000')", "u'010080 99999  20100102    20.5 24    16.4 24  9999.9  0  9999.9  0    6.2 24   20.4 24   33.0   40.0    33.4*    8.6*  0.00G   5.1  001000')", "u'010080 99999  20100103     6.9 24    -3.7 24  9999.9  0  9999.9  0    7.2 24   14.1 24   21.4  999.9     9.7*    4.5*  0.04G   5.1  001000')", "u'010080 99999  20100104     4.9 24    -6.2 24  9999.9  0  9999.9  0    8.7 23   13.1 24   19.4  999.9     6.8*    3.2*  0.00G 999.9  001000')"]
+>>> rdd3 = rdd2.map(lambda x: ' '.join(x.split()))
+>>> rdd4 = rdd3.map(lambda x: x[1:-2])
+>>> rdd4.take(4)
+["'010080 99999 20100101 23.2 24 19.0 24 9999.9 0 9999.9 0 7.0 23 6.0 24 15.9 999.9 33.8* 14.0 0.00H 999.9 001000", "'010080 99999 20100102 20.5 24 16.4 24 9999.9 0 9999.9 0 6.2 24 20.4 24 33.0 40.0 33.4* 8.6* 0.00G 5.1 001000", "'010080 99999 20100103 6.9 24 -3.7 24 9999.9 0 9999.9 0 7.2 24 14.1 24 21.4 999.9 9.7* 4.5* 0.04G 5.1 001000", "'010080 99999 20100104 4.9 24 -6.2 24 9999.9 0 9999.9 0 8.7 23 13.1 24 19.4 999.9 6.8* 3.2* 0.00G 999.9 001000"]
+>>>mypath= “/user/koppurkn/”
+>>> rdd4.saveAsTextFile(mypath+'temp_data')
+>>> newInData2010 = spark.read.csv(mypath+'temp_data',header=False,sep=' ')
+>>> newInData2010.show(10)
++-------+-----+--------+----+---+------+---+------+---+------+----+-----+--------+----+----+-----+-----+-----+-----+-----+------+
+|    _c0|  _c1|     _c2| _c3|_c4|   _c5|_c6|   _c7|_c8|   _c9|_c10| _c11|_c12|_c13|_c14|_c15| _c16| _c17| _c18| _c19| _c20|  _c21|
++-------+-----+--------+----+---+------+---+------+---+------+----+-----+--------+----+----+-----+-----+-----+-----+-----+------+
+|'996400|99999|20100101|57.2| 24|9999.9|  0|1024.7| 24|9999.9|   0|999.9|   0| 3.8|  24| 7.8|999.9|58.5*|56.1*|0.00I|999.9|000000|
+|'996400|99999|20100102|60.0| 24|9999.9|  0|1019.0| 24|9999.9|   0|999.9|   0| 5.0|  24|13.6|999.9|63.0*|57.7*|0.00I|999.9|000000|
+|'996400|99999|20100103|60.6| 24|9999.9|  0|1017.3| 24|9999.9|   0|999.9|   0| 3.9|  24| 7.8|999.9|64.4*|58.8*|0.00I|999.9|000000|
+|'996400|99999|20100104|60.1| 24|9999.9|  0|1018.0| 24|9999.9|   0|999.9|   0| 2.9|  24| 5.8|999.9|62.4*|58.3*|0.00I|999.9|000000|
+|'996400|99999|20100105|59.0| 24|9999.9|  0|1018.0| 24|9999.9|   0|999.9|   0| 3.6|  24| 7.8|999.9|62.1*|57.2*|0.00I|999.9|000000|
+|'996400|99999|20100106|59.3| 24|9999.9|  0|1017.0| 24|9999.9|   0|999.9|   0| 3.5|  24| 9.7|999.9|61.2*|57.9*|0.00I|999.9|000000|
+|'996400|99999|20100107|59.2| 24|9999.9|  0|1015.5| 24|9999.9|   0|999.9|   0| 3.2|  24| 7.8|999.9|60.8*|56.8*|0.00I|999.9|000000|
+|'996400|99999|20100108|58.2| 24|9999.9|  0|1017.0| 24|9999.9|   0|999.9|   0| 3.8|  24| 7.8|999.9|61.3*|55.0*|0.00I|999.9|000000|
+|'996400|99999|20100109|59.5| 24|9999.9|  0|1020.0| 24|9999.9|   0|999.9|   0| 3.6|  24| 7.8|999.9|61.3*|58.1*|0.00I|999.9|000000|
+|'996400|99999|20100110|59.8| 24|9999.9|  0|1019.1| 24|9999.9|   0|999.9|   0| 5.2|  24| 9.7|999.9|61.3*|58.5*|0.00I|999.9|000000|
++-------+-----+--------+----+---+------+---+------+---+------+----+-----+--------+----+----+-----+-----+-----+-----+-----+------+
+only showing top 10 rows
+
+>>> cleanData2010 = newInData2010.drop('_c1','_c4','_c6','_c8','_c10','_c12','_c14')
+>>> cleanData2010.show(5)
+
++-------+--------+----+------+------+------+-----+--------+-----+-----+-----+-----+-----+------+
+|    _c0|     _c2| _c3|   _c5|   _c7|   _c9| _c11|_c13|_c15| _c16| _c17| _c18| _c19| _c20|  _c21|
++-------+--------+----+------+------+------+-----+--------+-----+-----+-----+-----+-----+------+
+|'996400|20100101|57.2|9999.9|1024.7|9999.9|999.9| 3.8| 7.8|999.9|58.5*|56.1*|0.00I|999.9|000000|
+|'996400|20100102|60.0|9999.9|1019.0|9999.9|999.9| 5.0|13.6|999.9|63.0*|57.7*|0.00I|999.9|000000|
+|'996400|20100103|60.6|9999.9|1017.3|9999.9|999.9| 3.9| 7.8|999.9|64.4*|58.8*|0.00I|999.9|000000|
+|'996400|20100104|60.1|9999.9|1018.0|9999.9|999.9| 2.9| 5.8|999.9|62.4*|58.3*|0.00I|999.9|000000|
+|'996400|20100105|59.0|9999.9|1018.0|9999.9|999.9| 3.6| 7.8|999.9|62.1*|57.2*|0.00I|999.9|000000|
++-------+--------+----+------+------+------+-----+--------+-----+-----+-----+-----+-----+------+
+only showing top 5 rows
+
+>>> print(names)
+['STN---', 'WBAN', 'YEARMODA', 'TEMP', 'DEWP', 'SLP', 'STP', 'VISIB', 'WDSP', 'MXSPD', 'GUST', 'MAX', 'MIN', 'PRCP', 'SNDP', 'FRSHTT']
+>>> cleanData2010 = cleanData2010.withColumnRenamed('_c0','STN').withColumnRenamed('_c2','YEARMODA')\
+...                     .withColumnRenamed('_c3','TEMP').withColumnRenamed('_c5','DEWP')\
+...                     .withColumnRenamed('_c7','SLP').withColumnRenamed('_c9','STP')\
+...                     .withColumnRenamed('_c11','VISIB').withColumnRenamed('_c13','WDSP')\
+...                     .withColumnRenamed('_c15','MXSPD').withColumnRenamed('_c16','GUST')\
+...                     .withColumnRenamed('_c17','MAX').withColumnRenamed('_c18','MIN')\
+...                     .withColumnRenamed('_c19','PRCP').withColumnRenamed('_c20','SNDP')\
+...                     .withColumnRenamed('_c21','FRSHTT')
+>>>
+>>> cleanData2010.printSchema()
+root
+ |-- STN: string (nullable = true)
+ |-- YEARMODA: string (nullable = true)
+ |-- TEMP: string (nullable = true)
+ |-- DEWP: string (nullable = true)
+ |-- SLP: string (nullable = true)
+ |-- STP: string (nullable = true)
+ |-- VISIB: string (nullable = true)
+ |-- WDSP: string (nullable = true)
+ |-- MXSPD: string (nullable = true)
+ |-- GUST: string (nullable = true)
+ |-- MAX: string (nullable = true)
+ |-- MIN: string (nullable = true)
+ |-- PRCP: string (nullable = true)
+ |-- SNDP: string (nullable = true)
+ |-- FRSHTT: string (nullable = true)
+ 
+>>> cleanData2010.count()
+3686244
+>>> cleanData2010.show(2)
++-------+--------+----+------+------+------+-----+----+-----+-----+-----+-----+-----+-----+------+
+|    STN|YEARMODA|TEMP|  DEWP|   SLP|   STP|VISIB|WDSP|MXSPD| GUST|  MAX|  MIN| PRCP| SNDP|FRSHTT|
++-------+--------+----+------+------+------+-----+----+-----+-----+-----+-----+-----+-----+------+
+|'996400|20100101|57.2|9999.9|1024.7|9999.9|999.9| 3.8|  7.8|999.9|58.5*|56.1*|0.00I|999.9|000000|
+|'996400|20100102|60.0|9999.9|1019.0|9999.9|999.9| 5.0| 13.6|999.9|63.0*|57.7*|0.00I|999.9|000000|
++-------+--------+----+------+------+------+-----+----+-----+-----+-----+-----+-----+-----+------+
+only showing top 2 rows
+
+
+#2011
+file_path = "/data/weather/2011/"
+inTextData2011 = spark.read.format("csv").option("header", "true").option("delimiter","\t").load(file_path)
+name_list = inTextData2011.schema.names
+
+name_list = str(name_list).strip("['']").split(' ')
+names = []
+
+for item in name_list:
+    if len(item)>0:
+        names.append(item)
+		
+
+
+rdd1 = inTextData.rdd
+rdd2 = rdd1.map(lambda x: str(x).split('=')[1])
+rdd3 = rdd2.map(lambda x: ' '.join(x.split()))
+rdd4 = rdd3.map(lambda x: x[1:-2])
+
+mypath="/user/koppurkn/"
+rdd4.saveAsTextFile(mypath+'temp_2011')
+
+newInData = spark.read.csv(mypath+'temp_2011',header=False,sep=' ')
+
+cleanData2011 = newInData.drop('_c1','_c4','_c6','_c8','_c10','_c12','_c14')
+
+cleanData2011 = cleanData2011.withColumnRenamed('_c0','STN').withColumnRenamed('_c2','YEARMODA')\
+                    .withColumnRenamed('_c3','TEMP').withColumnRenamed('_c5','DEWP')\
+                    .withColumnRenamed('_c7','SLP').withColumnRenamed('_c9','STP')\
+                    .withColumnRenamed('_c11','VISIB').withColumnRenamed('_c13','WDSP')\
+                    .withColumnRenamed('_c15','MXSPD').withColumnRenamed('_c16','GUST')\
+                    .withColumnRenamed('_c17','MAX').withColumnRenamed('_c18','MIN')\
+                    .withColumnRenamed('_c19','PRCP').withColumnRenamed('_c20','SNDP')\
+                    .withColumnRenamed('_c21','FRSHTT')
+
+#2012
+file_path = "/data/weather/2012/"
+inTextData2012 = spark.read.format("csv").option("header", "true").option("delimiter","\t").load(file_path)
+name_list = inTextData2012.schema.names
+
+name_list = str(name_list).strip("['']").split(' ')
+names = []
+
+for item in name_list:
+    if len(item)>0:
+        names.append(item)
+		
+
+rdd1 = inTextData2012.rdd
+rdd2 = rdd1.map(lambda x: str(x).split('=')[1])
+rdd3 = rdd2.map(lambda x: ' '.join(x.split()))
+rdd4 = rdd3.map(lambda x: x[1:-2])
+
+mypath="/user/koppurkn/"
+rdd4.saveAsTextFile(mypath+'temp_2012')
+
+newInData2012 = spark.read.csv(mypath+'temp_2012',header=False,sep=' ')
+
+cleanData2012 = newInData2012.drop('_c1','_c4','_c6','_c8','_c10','_c12','_c14')
+
+cleanData2012 = cleanData2012.withColumnRenamed('_c0','STN').withColumnRenamed('_c2','YEARMODA')\
+                    .withColumnRenamed('_c3','TEMP').withColumnRenamed('_c5','DEWP')\
+                    .withColumnRenamed('_c7','SLP').withColumnRenamed('_c9','STP')\
+                    .withColumnRenamed('_c11','VISIB').withColumnRenamed('_c13','WDSP')\
+                    .withColumnRenamed('_c15','MXSPD').withColumnRenamed('_c16','GUST')\
+                    .withColumnRenamed('_c17','MAX').withColumnRenamed('_c18','MIN')\
+                    .withColumnRenamed('_c19','PRCP').withColumnRenamed('_c20','SNDP')\
+                    .withColumnRenamed('_c21','FRSHTT')
+
+#2013
+file_path = "/data/weather/2013/"
+inTextData2013 = spark.read.format("csv").option("header", "true").option("delimiter","\t").load(file_path)
+name_list = inTextData2013.schema.names
+
+name_list = str(name_list).strip("['']").split(' ')
+names = []
+
+for item in name_list:
+    if len(item)>0:
+        names.append(item)
+		
+
+rdd1 = inTextData2013.rdd
+rdd2 = rdd1.map(lambda x: str(x).split('=')[1])
+rdd3 = rdd2.map(lambda x: ' '.join(x.split()))
+rdd4 = rdd3.map(lambda x: x[1:-2])
+
+mypath="/user/koppurkn/"
+rdd4.saveAsTextFile(mypath+'temp_2013')
+
+newInData2013 = spark.read.csv(mypath+'temp_2013',header=False,sep=' ')
+
+cleanData2013 = newInData2013.drop('_c1','_c4','_c6','_c8','_c10','_c12','_c14')
+
+cleanData2013 = cleanData2013.withColumnRenamed('_c0','STN').withColumnRenamed('_c2','YEARMODA')\
+                    .withColumnRenamed('_c3','TEMP').withColumnRenamed('_c5','DEWP')\
+                    .withColumnRenamed('_c7','SLP').withColumnRenamed('_c9','STP')\
+                    .withColumnRenamed('_c11','VISIB').withColumnRenamed('_c13','WDSP')\
+                    .withColumnRenamed('_c15','MXSPD').withColumnRenamed('_c16','GUST')\
+                    .withColumnRenamed('_c17','MAX').withColumnRenamed('_c18','MIN')\
+                    .withColumnRenamed('_c19','PRCP').withColumnRenamed('_c20','SNDP')\
+                    .withColumnRenamed('_c21','FRSHTT')
+					
+#2014
+file_path = "/data/weather/2014/"
+inTextData2014 = spark.read.format("csv").option("header", "true").option("delimiter","\t").load(file_path)
+name_list = inTextData2014.schema.names
+
+name_list = str(name_list).strip("['']").split(' ')
+names = []
+
+for item in name_list:
+    if len(item)>0:
+        names.append(item)
+		
+
+rdd1 = inTextData2014.rdd
+rdd2 = rdd1.map(lambda x: str(x).split('=')[1])
+rdd3 = rdd2.map(lambda x: ' '.join(x.split()))
+rdd4 = rdd3.map(lambda x: x[1:-2])
+
+mypath="/user/koppurkn/"
+rdd4.saveAsTextFile(mypath+'temp_2014')
+
+newInData2014 = spark.read.csv(mypath+'temp_2014',header=False,sep=' ')
+
+cleanData2014 = newInData2014.drop('_c1','_c4','_c6','_c8','_c10','_c12','_c14')
+
+cleanData2014 = cleanData2014.withColumnRenamed('_c0','STN').withColumnRenamed('_c2','YEARMODA')\
+                    .withColumnRenamed('_c3','TEMP').withColumnRenamed('_c5','DEWP')\
+                    .withColumnRenamed('_c7','SLP').withColumnRenamed('_c9','STP')\
+                    .withColumnRenamed('_c11','VISIB').withColumnRenamed('_c13','WDSP')\
+                    .withColumnRenamed('_c15','MXSPD').withColumnRenamed('_c16','GUST')\
+                    .withColumnRenamed('_c17','MAX').withColumnRenamed('_c18','MIN')\
+                    .withColumnRenamed('_c19','PRCP').withColumnRenamed('_c20','SNDP')\
+                    .withColumnRenamed('_c21','FRSHTT')
+					
+#2015
+file_path = "/data/weather/2015/"
+inTextData2015 = spark.read.format("csv").option("header", "true").option("delimiter","\t").load(file_path)
+name_list = inTextData2015.schema.names
+
+name_list = str(name_list).strip("['']").split(' ')
+names = []
+
+for item in name_list:
+    if len(item)>0:
+        names.append(item)
+		
+
+rdd1 = inTextData2015.rdd
+rdd2 = rdd1.map(lambda x: str(x).split('=')[1])
+rdd3 = rdd2.map(lambda x: ' '.join(x.split()))
+rdd4 = rdd3.map(lambda x: x[1:-2])
+
+mypath="/user/koppurkn/"
+rdd4.saveAsTextFile(mypath+'temp_2015')
+
+newInData2015 = spark.read.csv(mypath+'temp_2015',header=False,sep=' ')
+
+cleanData2015 = newInData2015.drop('_c1','_c4','_c6','_c8','_c10','_c12','_c14')
+
+cleanData2015 = cleanData2015.withColumnRenamed('_c0','STN').withColumnRenamed('_c2','YEARMODA')\
+                    .withColumnRenamed('_c3','TEMP').withColumnRenamed('_c5','DEWP')\
+                    .withColumnRenamed('_c7','SLP').withColumnRenamed('_c9','STP')\
+                    .withColumnRenamed('_c11','VISIB').withColumnRenamed('_c13','WDSP')\
+                    .withColumnRenamed('_c15','MXSPD').withColumnRenamed('_c16','GUST')\
+                    .withColumnRenamed('_c17','MAX').withColumnRenamed('_c18','MIN')\
+                    .withColumnRenamed('_c19','PRCP').withColumnRenamed('_c20','SNDP')\
+                    .withColumnRenamed('_c21','FRSHTT')
+					
+#2016
+file_path = "/data/weather/2016/"
+inTextData2016 = spark.read.format("csv").option("header", "true").option("delimiter","\t").load(file_path)
+name_list = inTextData2016.schema.names
+
+name_list = str(name_list).strip("['']").split(' ')
+names = []
+
+for item in name_list:
+    if len(item)>0:
+        names.append(item)
+		
+
+rdd1 = inTextData2016.rdd
+rdd2 = rdd1.map(lambda x: str(x).split('=')[1])
+rdd3 = rdd2.map(lambda x: ' '.join(x.split()))
+rdd4 = rdd3.map(lambda x: x[1:-2])
+
+mypath="/user/koppurkn/"
+rdd4.saveAsTextFile(mypath+'temp_2016')
+
+newInData2016 = spark.read.csv(mypath+'temp_2016',header=False,sep=' ')
+
+cleanData2016 = newInData2016.drop('_c1','_c4','_c6','_c8','_c10','_c12','_c14')
+
+cleanData2016 = cleanData2016.withColumnRenamed('_c0','STN').withColumnRenamed('_c2','YEARMODA')\
+                    .withColumnRenamed('_c3','TEMP').withColumnRenamed('_c5','DEWP')\
+                    .withColumnRenamed('_c7','SLP').withColumnRenamed('_c9','STP')\
+                    .withColumnRenamed('_c11','VISIB').withColumnRenamed('_c13','WDSP')\
+                    .withColumnRenamed('_c15','MXSPD').withColumnRenamed('_c16','GUST')\
+                    .withColumnRenamed('_c17','MAX').withColumnRenamed('_c18','MIN')\
+                    .withColumnRenamed('_c19','PRCP').withColumnRenamed('_c20','SNDP')\
+                    .withColumnRenamed('_c21','FRSHTT')
+
+#2017
+file_path = "/data/weather/2017/"
+inTextData2017 = spark.read.format("csv").option("header", "true").option("delimiter","\t").load(file_path)
+name_list = inTextData2017.schema.names
+
+name_list = str(name_list).strip("['']").split(' ')
+names = []
+
+for item in name_list:
+    if len(item)>0:
+        names.append(item)
+		
+
+rdd1 = inTextData2017.rdd
+rdd2 = rdd1.map(lambda x: str(x).split('=')[1])
+rdd3 = rdd2.map(lambda x: ' '.join(x.split()))
+rdd4 = rdd3.map(lambda x: x[1:-2])
+
+mypath="/user/koppurkn/"
+rdd4.saveAsTextFile(mypath+'temp_2017')
+
+newInData2017 = spark.read.csv(mypath+'temp_2017',header=False,sep=' ')
+
+cleanData2017 = newInData2017.drop('_c1','_c4','_c6','_c8','_c10','_c12','_c14')
+
+cleanData2017 = cleanData2017.withColumnRenamed('_c0','STN').withColumnRenamed('_c2','YEARMODA')\
+                    .withColumnRenamed('_c3','TEMP').withColumnRenamed('_c5','DEWP')\
+                    .withColumnRenamed('_c7','SLP').withColumnRenamed('_c9','STP')\
+                    .withColumnRenamed('_c11','VISIB').withColumnRenamed('_c13','WDSP')\
+                    .withColumnRenamed('_c15','MXSPD').withColumnRenamed('_c16','GUST')\
+                    .withColumnRenamed('_c17','MAX').withColumnRenamed('_c18','MIN')\
+                    .withColumnRenamed('_c19','PRCP').withColumnRenamed('_c20','SNDP')\
+                    .withColumnRenamed('_c21','FRSHTT')
+
+#2018
+file_path = "/data/weather/2018/"
+inTextData2018 = spark.read.format("csv").option("header", "true").option("delimiter","\t").load(file_path)
+name_list = inTextData2018.schema.names
+
+name_list = str(name_list).strip("['']").split(' ')
+names = []
+
+for item in name_list:
+    if len(item)>0:
+        names.append(item)
+		
+
+rdd1 = inTextData2018.rdd
+rdd2 = rdd1.map(lambda x: str(x).split('=')[1])
+rdd3 = rdd2.map(lambda x: ' '.join(x.split()))
+rdd4 = rdd3.map(lambda x: x[1:-2])
+
+mypath="/user/koppurkn/"
+rdd4.saveAsTextFile(mypath+'temp_2018')
+
+newInData2018= spark.read.csv(mypath+'temp_2018',header=False,sep=' ')
+
+cleanData2018 = newInData2018.drop('_c1','_c4','_c6','_c8','_c10','_c12','_c14')
+
+cleanData2018 = cleanData2018.withColumnRenamed('_c0','STN').withColumnRenamed('_c2','YEARMODA')\
+                    .withColumnRenamed('_c3','TEMP').withColumnRenamed('_c5','DEWP')\
+                    .withColumnRenamed('_c7','SLP').withColumnRenamed('_c9','STP')\
+                    .withColumnRenamed('_c11','VISIB').withColumnRenamed('_c13','WDSP')\
+                    .withColumnRenamed('_c15','MXSPD').withColumnRenamed('_c16','GUST')\
+                    .withColumnRenamed('_c17','MAX').withColumnRenamed('_c18','MIN')\
+                    .withColumnRenamed('_c19','PRCP').withColumnRenamed('_c20','SNDP')\
+                    .withColumnRenamed('_c21','FRSHTT')
+					
+#2019
+file_path = "/data/weather/2019/"
+inTextData2019 = spark.read.format("csv").option("header", "true").option("delimiter","\t").load(file_path)
+name_list = inTextData2019.schema.names
+
+name_list = str(name_list).strip("['']").split(' ')
+names = []
+
+for item in name_list:
+    if len(item)>0:
+        names.append(item)
+		
+
+rdd1 = inTextData2019.rdd
+rdd2 = rdd1.map(lambda x: str(x).split('=')[1])
+rdd3 = rdd2.map(lambda x: ' '.join(x.split()))
+rdd4 = rdd3.map(lambda x: x[1:-2])
+
+mypath="/user/koppurkn/"
+rdd4.saveAsTextFile(mypath+'temp_2019')
+
+newInData2019 = spark.read.csv(mypath+'temp_2019',header=False,sep=' ')
+
+cleanData2019 = newInData2019.drop('_c1','_c4','_c6','_c8','_c10','_c12','_c14')
+cleanData2019 = cleanData2019.withColumnRenamed('_c0','STN').withColumnRenamed('_c2','YEARMODA')\
+                    .withColumnRenamed('_c3','TEMP').withColumnRenamed('_c5','DEWP')\
+                    .withColumnRenamed('_c7','SLP').withColumnRenamed('_c9','STP')\
+                    .withColumnRenamed('_c11','VISIB').withColumnRenamed('_c13','WDSP')\
+                    .withColumnRenamed('_c15','MXSPD').withColumnRenamed('_c16','GUST')\
+                    .withColumnRenamed('_c17','MAX').withColumnRenamed('_c18','MIN')\
+                    .withColumnRenamed('_c19','PRCP').withColumnRenamed('_c20','SNDP')\
+                    .withColumnRenamed('_c21','FRSHTT')
+					
+
+
+>>>cleanData2010.registerTempTable("cleanData2010")
+#2010Maximum
+>>> spark.sql("Select STN,YEARMODA,MAX from cleanData2010 WHERE MAX in (Select MAX(CAST(REPLACE(MAX,'*','') as double)) from cleanData2010 where MAX!=9999.9)").show()
++-------+--------+-----+
+|    STN|YEARMODA|  MAX|
++-------+--------+-----+
+|'720667|20100923|132.8|
++-------+--------+-----+
+#2010Minimum
+>>> spark.sql("Select STN,YEARMODA,MIN from cleanData2010 WHERE MIN in (Select MIN(CAST(REPLACE(MIN,'*','') as double)) from cleanData2010 where MIN!=9999.9)").show()
++-------+--------+------+
+|    STN|YEARMODA|   MIN|
++-------+--------+------+
+|'896060|20100802|-115.2|
++-------+--------+------+
+
+>>>cleanData2011.registerTempTable("cleanData2011")
+#2011Maximum
+>>> spark.sql("Select STN,YEARMODA,MAX from cleanData2011 WHERE MAX in (Select MAX(CAST(REPLACE(MAX,'*','') as double)) from cleanData2011 where MAX!=9999.9)").show()
++-------+--------+-----+
+|    STN|YEARMODA|  MAX|
++-------+--------+-----+
+|'720293|20110613|131.0|
++-------+--------+-----+
+#2011Minimum
+>>> spark.sql("Select STN,YEARMODA,MIN from cleanData2011 WHERE MIN in (Select MIN(CAST(REPLACE(MIN,'*','') as double)) from cleanData2011 where MIN!=9999.9)").show()
++-------+--------+------+
+|    STN|YEARMODA|   MIN|
++-------+--------+------+
+|'897340|20110917|-111.8|
++-------+--------+------+
+
+>>> cleanData2012.registerTempTable("cleanData2012")
+#2012Maximum
+>>> spark.sql("Select STN,YEARMODA,MAX from cleanData2012 WHERE MAX in (Select MAX(CAST(REPLACE(MAX,'*','') as double)) from cleanData2012 where MAX!=9999.9)").show()
+Hive Session ID = 8803d744-6ae1-4e38-a18d-3cdc72fb163c
++-------+--------+-----+
+|    STN|YEARMODA|  MAX|
++-------+--------+-----+
+|'722577|20120712|132.8|
++-------+--------+-----+
+#2012Minimum
+>>> spark.sql("Select STN,YEARMODA,MIN from cleanData2012 WHERE MIN in (Select MIN(CAST(REPLACE(MIN,'*','') as double)) from cleanData2012 where MIN!=9999.9)").show()
++-------+--------+------+
+|    STN|YEARMODA|   MIN|
++-------+--------+------+
+|'896060|20120916|-119.6|
++-------+--------+------+
+
+>>> cleanData2013.registerTempTable("cleanData2013")
+#2013Maximum
+>>> spark.sql("Select STN,YEARMODA,MAX from cleanData2013 WHERE MAX in (Select MAX(CAST(REPLACE(MAX,'*','') as double)) from cleanData2013 where MAX!=9999.9)").show()
++-------+--------+-----+
+|    STN|YEARMODA|  MAX|
++-------+--------+-----+
+|'406890|20130712|132.8|
++-------+--------+-----+
+#2013Minimum
+>>> spark.sql("Select STN,YEARMODA,MIN from cleanData2013 WHERE MIN in (Select MIN(CAST(REPLACE(MIN,'*','') as double)) from cleanData2013 where MIN!=9999.9)").show()
++-------+--------+------+
+|    STN|YEARMODA|   MIN|
++-------+--------+------+
+|'895770|20130730|-115.1|
++-------+--------+------+
+
+>>> cleanData2014.registerTempTable("cleanData2014")
+#2014Maximum
+>>> spark.sql("Select STN,YEARMODA,MAX from cleanData2014 WHERE MAX in (Select MAX(CAST(REPLACE(MAX,'*','') as double)) from cleanData2014 where MAX!=9999.9)").show()
++-------+--------+-----+
+|    STN|YEARMODA|  MAX|
++-------+--------+-----+
+|'406650|20140803|129.6|
++-------+--------+-----+
+#2014Minimum
+>>> spark.sql("Select STN,YEARMODA,MIN from cleanData2014 WHERE MIN in (Select MIN(CAST(REPLACE(MIN,'*','') as double)) from cleanData2014 where MIN!=9999.9)").show()
++-------+--------+------+
+|    STN|YEARMODA|   MIN|
++-------+--------+------+
+|'896060|20140821|-113.4|
++-------+--------+------+
+
+>>> cleanData2015.registerTempTable("cleanData2015")
+#2015Maximum
+>>> spark.sql("Select STN,YEARMODA,MAX from cleanData2015 WHERE MAX in (Select MAX(CAST(REPLACE(MAX,'*','') as double)) from cleanData2015 where MAX!=9999.9)").show()
++-------+--------+-----+
+|    STN|YEARMODA|  MAX|
++-------+--------+-----+
+|'916700|20151021|132.4|
++-------+--------+-----+
+#2015Minimum
+>>> spark.sql("Select STN,YEARMODA,MIN from cleanData2015 WHERE MIN in (Select MIN(CAST(REPLACE(MIN,'*','') as double)) from cleanData2015 where MIN!=9999.9)").show()
++-------+--------+------+
+|    STN|YEARMODA|   MIN|
++-------+--------+-----+
+|'895770|20150917|-114.2|
++-------+--------+------+
+
+>>> cleanData2016.registerTempTable("cleanData2016")
+#2016Maximum
+>>> spark.sql("Select STN,YEARMODA,MAX from cleanData2016 WHERE MAX in (Select MAX(CAST(REPLACE(MAX,'*','') as double)) from cleanData2016 where MAX!=9999.9)").show()
++-------+--------+-----+
+|    STN|YEARMODA|  MAX|
++-------+--------+-----+
+|'700638|20160622|129.0|
++-------+--------+-----+
+#2016Minimum
+>>> spark.sql("Select STN,YEARMODA,MIN from cleanData2016 WHERE MIN in (Select MIN(CAST(REPLACE(MIN,'*','') as double)) from cleanData2016 where MIN!=9999.9)").show()
++-------+--------+------+
+|    STN|YEARMODA|   MIN|
++-------+--------+------+
+|'896060|20160712|-115.1|
++-------+--------+------+
+
+>>> cleanData2017.registerTempTable("cleanData2017")
+#2017Maximum
+>>> spark.sql("Select STN,YEARMODA,MAX from cleanData2017 WHERE MAX in (Select MAX(CAST(REPLACE(MAX,'*','') as double)) from cleanData2017 where MAX!=9999.9)").show()
++-------+--------+-----+
+|    STN|YEARMODA|  MAX|
++-------+--------+-----+
+|'917430|20170410|129.6|
++-------+--------+-----+
+#2017Minimum
+>>> spark.sql("Select STN,YEARMODA,MIN from cleanData2017 WHERE MIN in (Select MIN(CAST(REPLACE(MIN,'*','') as double)) from cleanData2017 where MIN!=9999.9)").show()
++-------+--------+------+
+|    STN|YEARMODA|   MIN|
++-------+--------+------+
+|'896250|20170620|-116.0|
++-------+--------+------+
+
+cleanData2018.registerTempTable("cleanData2018")
+#2018Maximum
+>>> spark.sql("Select STN,YEARMODA,MAX from cleanData2018 WHERE MAX in (Select MAX(CAST(REPLACE(MAX,'*','') as double)) from cleanData2018 where MAX!=9999.9)").show()
++-------+--------+-----+
+|    STN|YEARMODA|  MAX|
++-------+--------+-----+
+|'408110|20180702|126.3|
++-------+--------+-----+
+#2018Minimum
+>>> spark.sql("Select STN,YEARMODA,MIN from cleanData2018 WHERE MIN in (Select MIN(CAST(REPLACE(MIN,'*','') as double)) from cleanData2018 where MIN!=9999.9)").show()
++-------+--------+------+
+|    STN|YEARMODA|   MIN|
++-------+--------+------+
+|'896060|20180828|-116.3|
++-------+--------+------+
+
+>>> cleanData2019.registerTempTable("cleanData2019")
+#2019Maximum
+>>> spark.sql("Select STN,YEARMODA,MAX from cleanData2019 WHERE MAX in (Select MAX(CAST(REPLACE(MAX,'*','') as double)) from cleanData2019 where MAX!=9999.9)").show()
++-------+--------+-----+
+|    STN|YEARMODA|  MAX|
++-------+--------+-----+
+|'956660|20190124|121.1|
++-------+--------+-----+
+#2019Minimum
+>>> spark.sql("Select STN,YEARMODA,MIN from cleanData2019 WHERE MIN in (Select MIN(CAST(REPLACE(MIN,'*','') as double)) from cleanData2019 where MIN!=9999.9)").show()
++-------+--------+------+
+|    STN|YEARMODA|   MIN|
++-------+--------+------+
+|'896060|20190405|-102.1|
++-------+--------+------+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Question:2-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+CD2010_2019=cleanData2010.unionAll(cleanData2011).unionAll(cleanData2012).unionAll(cleanData2013).unionAll(cleanData2014).unionAll(cleanData2015).unionAll(cleanData2016).unionAll(cleanData2017).unionAll(cleanData2018).unionAll(cleanData2019)
+
+CD2010_2019.registerTempTable("CD2010_2019")
+#Hottest Day of all years
+spark.sql("Select distinct(STN),YEARMODA,MAX from CD2010_2019 where MAX in (select MAX(MAX) from CD2010_2019 where MAX <> 9999.9)").show()
++------+--------+-----+                                                 
+|   STN|YEARMODA|  MAX|
++------+--------+-----+
+|720667|20100923|132.8|
+|722577|20120712|132.8|
+|406890|20130712|132.8|
++------+--------+-----+
+
+
+#Colderst Day of all years
+spark.sql("Select distinct(STN),YEARMODA,MIN from CD2010_2019 where MIN in (select MIN(MIN) from CD2010_2019 where MIN <> 9999.9)").show()
++------+--------+------+                                                 
+|   STN|YEARMODA|   MIN|
++------+--------+------+
+|896060|20120916|-119.6|
++------+--------+------+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Question:3-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#Maximum Precipitation in 2015
+>>> spark.sql("Select distinct(STN),YEARMODA,PRCP from cleanData2015 where PRCP in (select MAX(PRCP) from cleanData2015 where PRCP!='99.99') LIMIT 1").show()
++-------+--------+------+
+|    STN|YEARMODA|  PRCP|
++-------+--------+------+
+|'915410|20150311|19.49G|
++-------+--------+------+
+
+
+#Minimum precipitation in 2015
+>>> spark.sql("Select distinct(STN),YEARMODA,PRCP from cleanData2015 where PRCP in (select MIN(PRCP) from cleanData2015 where PRCP!='99.99')").show()
++-------+--------+-----+
+|    STN|YEARMODA| PRCP|
++-------+--------+-----+
+|'719740|20150127|0.00A|
+|'717820|20151016|0.00A|
+|'717830|20150305|0.00A|
+|'941270|20150522|0.00A|
+|'941370|20150719|0.00A|
+|'715920|20150914|0.00A|
+|'115670|20150809|0.00A|
+|'711720|20150608|0.00A|
+|'711990|20151202|0.00A|
+|'118560|20150721|0.00A|
+|'118560|20150902|0.00A|
+|'025870|20151031|0.00A|
+|'085450|20150105|0.00A|
+|'802590|20151229|0.00A|
+|'842030|20151213|0.00A|
+|'688280|20150520|0.00A|
+|'688280|20150606|0.00A|
+|'800220|20151027|0.00A|
+|'080940|20150208|0.00A|
+|'080940|20150626|0.00A|
++-------+--------+-----+
+only showing top 20 rows
+
+>>> spark.sql("Select distinct(STN),YEARMODA,PRCP from cleanData2015 where PRCP in (select MIN(PRCP) from cleanData2015 where PRCP!='99.99') LIMIT 1").show()
++-------+--------+-----+
+|    STN|YEARMODA| PRCP|
++-------+--------+-----+
+|'702628|20151020|0.00A|
++-------+--------+-----+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Question:4-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Total_Values=cleanData2019.count()                                            
+Missing_Values=cleanData2019.where("STP='9999.9'")                              
+Missing_Values=Missing_Values.count()
+Percentage = (Missing_Values/float(Total_Values)) * 100
+print(Percentage)
+27.961149261
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Question:5-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+spark.sql("Select STN,YEARMODA,GUST from cleanData2019 where GUST = (select MAX(GUST) from cleanData2019 where GUST <> 999.9)").show()
++-------+--------+-----+
+|    STN|YEARMODA| GUST|
++-------+--------+-----+
+|'085510|20190101|116.6|
++-------+--------+-----+
+
+
+
+
+
